@@ -17,7 +17,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable' # 对应 Dart 3.0.5
+          # flutter-version: 'stable' # 对应 Dart 3.0.5
           channel: 'stable'
           cache: true
           
