@@ -1,5 +1,8 @@
 name: All Platform Build
 
+env:
+  FLUTTER_VERSION: '3.24.5'  # 全局版本变量，便于统一管理
+
 on:
   workflow_dispatch: # 手动触发
   push:
@@ -17,12 +20,20 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # flutter-version: 'stable' # 对应 Dart 3.0.5
-          channel: 'stable'
-          cache: false
+          flutter-version: ${{ env.FLUTTER_VERSION }}  # 使用全局版本变量
+          cache: true
+          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-android'
           
       - name: Install dependencies
         run: flutter pub get
+        
+      - name: Cache pub dependencies  # 额外的pub缓存
+        uses: actions/cache@v3
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
       - name: Build APK
         run: flutter build apk --release
@@ -44,8 +55,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2'  # 确认支持ARM64的稳定版本
-          cache: false
+          flutter-version: ${{ env.FLUTTER_VERSION }}  # 使用全局版本变量
+          cache: true
+          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-windows'
           
       - name: Enable Desktop
         run: flutter config --enable-windows-desktop
@@ -77,8 +89,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.2'  # 确认支持ARM64的稳定版本
-          cache: false
+          flutter-version: ${{ env.FLUTTER_VERSION }}  # 使用全局版本变量
+          cache: true
+          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-linux-arm'
           
       - name: Install Linux dependencies
         run: |
