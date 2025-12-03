@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       # 使用 Cirrus Labs 维护的 Flutter ARM 镜像
-      image: ghcr.io/cirruslabs/flutter:3.25.0
+      image: ghcr.io/cirruslabs/flutter:3.38.2
     steps:
       - uses: actions/checkout@v4
       - run: flutter --version # 此时应该显示正确的ARM版本和Dart 3.17+
