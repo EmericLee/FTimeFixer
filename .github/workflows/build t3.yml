@@ -1,4 +1,4 @@
-name: All Platform Build
+name: Build Terminal3
 
 on:
   workflow_dispatch: # 手动触发
@@ -17,17 +17,17 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.13.0
         with:
-          flutter-version: 3.24.5 # 使用全局版本变量
+          flutter-version: 3.38.3 # 使用全局版本变量
           cache: false
-          
-      - name: Install dependencies
-        run: flutter pub get
 
       - name: Check
         run: |
           flutter doctor -v
-          flutter --version        
-        
+          flutter --version       
+          
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Build APK
         run: flutter build apk --release
 
