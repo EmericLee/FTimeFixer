@@ -91,8 +91,8 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}  # 使用全局版本变量
           architecture: linux-arm64  # 明确指定ARM64架构
-          cache: true
-          cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-linux-arm'
+          cache: false
+          # cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-linux-arm'
           
       - name: Install Linux dependencies
         run: |
