@@ -23,6 +23,11 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}  # 使用全局版本变量
           cache: flase
           cache-key: 'flutter-${{ env.FLUTTER_VERSION }}-android'
+
+      - name: Check
+        run: |
+          flutter doctor -v
+          flutter --version
           
       - name: Install dependencies
         run: flutter pub get
