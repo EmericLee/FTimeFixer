@@ -24,8 +24,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Set up Flutter from Git
+        run: |
+          git clone https://github.com/flutter/flutter.git -b 3.38.3 --depth 1 ~/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
 
       - name: Install system dependencies
         run: |
@@ -44,12 +47,7 @@ jobs:
             wget \
             curl \
             git \
-            unzip
-
-      - name: Set up Flutter from Git
-        run: |
-          git clone https://github.com/flutter/flutter.git -b 3.38.3 --depth 1 ~/flutter
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+            unzip          
 
       # 3. 配置Flutter Linux桌面支持
       - name: Setup Flutter for Linux Desktop
