@@ -19,6 +19,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install appimagetool
+        run: |
+          mkdir -p ~/bin
+          cd ~/bin
+          wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
+          chmod +x appimagetool-aarch64.AppImage
+          ./appimagetool-aarch64.AppImage --appimage-extract
+          echo "$HOME/bin/squashfs-root/usr/bin" >> $GITHUB_PATH
+
+          # mkdir -p ~/appimage
+          # cd ~/appimage
+          # echo "$HOME/appimage" >> $GITHUB_PATH
+          # wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
+          # chmod +x appimagetool        
+
       # 1. 使用Git方式安装Flutter SDK (确保ARM兼容性)
       - name: Setup Flutter SDK from Git
         run: |
@@ -39,6 +54,7 @@ jobs:
             pkg-config \
             libgtk-3-dev \
             liblzma-dev \
+            locate \
             libstdc++-12-dev
 
       - name: Setup Flutter for Linux Desktop
@@ -53,21 +69,6 @@ jobs:
       - name: Install Fastforge
         run: |
           dart pub global activate fastforge
-
-      - name: Install appimagetool
-        run: |
-          mkdir -p ~/bin
-          cd ~/bin
-          wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
-          chmod +x appimagetool-aarch64.AppImage
-          ./appimagetool-aarch64.AppImage --appimage-extract
-          echo "$HOME/bin/squashfs-root/usr/bin" >> $GITHUB_PATH
-
-          # mkdir -p ~/appimage
-          # cd ~/appimage
-          # echo "$HOME/appimage" >> $GITHUB_PATH
-          # wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
-          # chmod +x appimagetool
 
       # - name: Configure Fastforge Package Name (可选)
       #   run: |
