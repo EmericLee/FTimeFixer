@@ -1,0 +1,139 @@
+name: "AppImage for UOS (ARM64)"
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - '.github/workflows/build_uos-arm.yml'
+  workflow_dispatch: # 允许手动触发
+
+
+jobs:
+  build:
+    name: Build Linux ARM64
+    # 使用官方 ARM Runner
+    runs-on: ubuntu-24.04-arm
+    
+    # 【关键步骤】：为了兼容统信 UOS (GLIBC_2.28)，我们必须在 Debian 10 (Buster) 容器内构建
+    # Debian 10 默认 GLIBC 版本正是 2.28
+    container:
+      image: arm64v8/debian:buster
+      options: --user root # 确保有权限安装依赖
+
+    env:
+      FLUTTER_VERSION: '3.38.3'
+      # 定义 App 基本信息
+      APP_NAME: my_flutter_app
+      APP_ID: com.example.myapp
+
+    steps:
+      # 1. 初始化构建环境（在容器内）
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          # 安装构建工具、Flutter 依赖、Git 和 AppImage 工具依赖
+          apt-get install -y \
+            git curl unzip clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-8-dev \
+            build-essential libglu1-mesa-dev file wget fuse
+
+      # 2. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 3. 手动 Git 配置 Flutter SDK
+      - name: Setup Flutter SDK via Git
+        run: |
+          echo "Cloning Flutter SDK..."
+          git clone https://github.com/flutter/flutter.git --depth 1 -b $FLUTTER_VERSION _flutter
+          
+          # 配置环境变量
+          echo "$GITHUB_WORKSPACE/_flutter/bin" >> $GITHUB_PATH
+          
+          # 标记目录安全，防止 git 报错
+          git config --global --add safe.directory $GITHUB_WORKSPACE/_flutter
+
+      # 4. 验证 Flutter 环境并获取依赖
+      - name: Flutter Doctor & Pub Get
+        run: |
+          # 将 flutter 路径加入当前 session
+          export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
+          
+          # 禁用分析以加快速度
+          flutter config --no-analytics
+          
+          # 预下载构件
+          flutter precache --linux
+          
+          flutter doctor -v
+          flutter pub get
+
+      # 5. 构建 Release 包
+      - name: Build Linux Release
+        run: |
+          export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
+          flutter build linux --release --target-platform=linux-arm64
+
+      # 6. 准备 AppImage 构建工具 (LinuxDeploy)
+      - name: Setup AppImage Tools
+        run: |
+          # 下载 LinuxDeploy (aarch64)
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-aarch64.AppImage
+          chmod +x linuxdeploy-aarch64.AppImage
+          
+          # 由于在 Docker 内，FUSE 可能无法工作，我们解压使用
+          ./linuxdeploy-aarch64.AppImage --appimage-extract
+          mv squashfs-root linuxdeploy-root
+
+      # 7. 打包 AppImage
+      - name: Package AppImage
+        run: |
+          # 设置变量
+          BUILD_DIR=build/linux/arm64/release/bundle
+          APP_DIR=AppDir
+          
+          # 创建 AppDir 结构
+          mkdir -p $APP_DIR/usr/bin
+          mkdir -p $APP_DIR/usr/lib
+          mkdir -p $APP_DIR/usr/share/applications
+          mkdir -p $APP_DIR/usr/share/icons/hicolor/256x256/apps
+          
+          # 复制二进制文件和资源
+          cp -r $BUILD_DIR/* $APP_DIR/usr/bin/
+          # 通常 Flutter 构建出来的二进制文件名就是 pubspec.yaml 中的 name
+          # 假设二进制文件名为 my_flutter_app (请根据实际情况修改下面的 * )
+          BINARY_NAME=$(find $APP_DIR/usr/bin -maxdepth 1 -type f -executable ! -name "*.so" -printf "%f" | head -n 1)
+          echo "Detected Binary Name: $BINARY_NAME"
+          
+          # 创建 .desktop 文件 (如果项目没有，这里动态生成)
+          cat > $APP_DIR/usr/share/applications/${{ env.APP_ID }}.desktop <<EOF
+          [Desktop Entry]
+          Type=Application
+          Name=${{ env.APP_NAME }}
+          Exec=$BINARY_NAME
+          Icon=${{ env.APP_ID }}
+          Categories=Utility;
+          EOF
+          
+          # 复制图标 (假设项目根目录有 assets/logo.png)
+          # 如果没有图标，可以生成一个空的或者下载一个占位
+          # cp assets/logo.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
+          # 这里为了演示不报错，创建一个假图标
+          touch $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
+
+          # 使用 LinuxDeploy 自动打包依赖库 (GTK等)
+          # 注意：在 Docker 内需要设置 ARCH=arm64 并可能需要禁用 git 更新检查
+          export ARCH=arm64
+          export LINUXDEPLOY="./linuxdeploy-root/AppRun"
+          
+          $LINUXDEPLOY --appdir $APP_DIR \
+            --executable $APP_DIR/usr/bin/$BINARY_NAME \
+            --desktop-file $APP_DIR/usr/share/applications/${{ env.APP_ID }}.desktop \
+            --icon-file $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png \
+            --output appimage
+
+      # 8. 上传产物
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-app-uos-arm64
+          path: "*.AppImage"
