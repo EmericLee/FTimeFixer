@@ -13,7 +13,7 @@ on:
   workflow_dispatch: # 允许手动触发
 
 env:
-  FLUTTER_VERSION: '3.24.5'
+  FLUTTER_VERSION: '3.38.3'
   APP_NAME: 'flutter_demo'
 
 jobs:
