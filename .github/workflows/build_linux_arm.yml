@@ -20,8 +20,7 @@ jobs:
     name: Build Linux ARM64 AppImage
     runs-on: ubuntu-24.04-arm # 使用官方ARM架构Runner
     permissions:
-      contents: write
-          
+      contents: write    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -33,10 +32,9 @@ jobs:
           echo "/opt/flutter/bin" >> $GITHUB_PATH
 
 
-      # 2. 安装Linux桌面依赖 (旧版本兼容)
-      - name: Install Linux Desktop Dependencies (Legacy Compatible)
+      # 2. 安装Linux桌面依赖和FastForge所需工具
+      - name: Install Linux Desktop Dependencies
         run: |
-          # 使用旧的软件包版本降低GLIBC要求
           sudo apt-get update
           sudo apt-get install -y \
             clang \
@@ -45,18 +43,14 @@ jobs:
             pkg-config \
             libgtk-3-dev \
             liblzma-dev \
-            libstdc++-10-dev \    # 降级到GCC 10
+            libstdc++-12-dev \
             build-essential \
             file \
             patchelf \
             desktop-file-utils \
             zsync \
             squashfs-tools \
-            libfuse2t64 \
-            --no-install-recommends
-            
-          # 检查GCC版本
-          gcc --version
+            libfuse2t64
 
       # 3. 配置Flutter Linux桌面支持
       - name: Setup Flutter for Linux Desktop
