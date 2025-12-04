@@ -3,7 +3,7 @@ name: "Flutter Multi-platform Build"
 on:
   push:
     tags:
-      - "v*.*.*"  # 当推送v开头的标签时触发CI/CD
+      - "vb*.*.*"  # 当推送v开头的标签时触发CI/CD
   workflow_dispatch:  # 允许手动触发工作流
 
 jobs:
