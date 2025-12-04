@@ -95,7 +95,6 @@ jobs:
           echo "Build completed. Checking output:"
           ls -la dist/
 
-      9. 验证和优化AppImage
       - name: Validate and Optimize AppImage
         run: |
           APPIMAGE_FILE=$(find dist/ -name "*.AppImage" -type f | head -n1)
