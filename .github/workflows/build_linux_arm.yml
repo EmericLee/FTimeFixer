@@ -56,18 +56,18 @@ jobs:
 
       - name: Install appimagetool
         run: |
-          # mkdir -p ~/bin
-          # cd ~/bin
-          # wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
-          # chmod +x appimagetool-aarch64.AppImage
-          # ./appimagetool-aarch64.AppImage --appimage-extract
-          # echo "$HOME/bin/squashfs-root/usr/bin" >> $GITHUB_PATH
+          mkdir -p ~/bin
+          cd ~/bin
+          wget -c "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
+          chmod +x appimagetool-aarch64.AppImage
+          ./appimagetool-aarch64.AppImage --appimage-extract
+          echo "$HOME/bin/squashfs-root/usr/bin" >> $GITHUB_PATH
 
-          mkdir -p ~/appimage
-          cd ~/appimage
-          echo "$HOME/appimage" >> $GITHUB_PATH
-          wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
-          chmod +x appimagetool
+          # mkdir -p ~/appimage
+          # cd ~/appimage
+          # echo "$HOME/appimage" >> $GITHUB_PATH
+          # wget -O appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage"
+          # chmod +x appimagetool
 
       # - name: Configure Fastforge Package Name (可选)
       #   run: |
