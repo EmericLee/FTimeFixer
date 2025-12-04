@@ -10,17 +10,17 @@ jobs:
   # 1. Android 构建任务
   # ---------------------------------------------------
 
-  build-arm64:
-    # 指定使用 Docker 容器作为运行环境
-    runs-on: ubuntu-latest
-    container:
-      # 使用 Cirrus Labs 维护的 Flutter ARM 镜像
-      image: ghcr.io/cirruslabs/flutter:3.38.2
-    steps:
-      - uses: actions/checkout@v4
-      - run: flutter --version # 此时应该显示正确的ARM版本和Dart 3.17+
-      - run: flutter pub get
-      - run: flutter build linux --release
+  # build-arm64:
+  #   # 指定使用 Docker 容器作为运行环境
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     # 使用 Cirrus Labs 维护的 Flutter ARM 镜像
+  #     image: ghcr.io/cirruslabs/flutter:3.38.2
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: flutter --version # 此时应该显示正确的ARM版本和Dart 3.17+
+  #     - run: flutter pub get
+  #     - run: flutter build linux --release
   
   build-armgit:
     runs-on: ubuntu-24.04-arm
