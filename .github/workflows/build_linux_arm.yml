@@ -95,28 +95,17 @@ jobs:
           echo "Build completed. Checking output:"
           ls -la dist/
 
-      # 9. 验证和优化AppImage
+      9. 验证和优化AppImage
       - name: Validate and Optimize AppImage
         run: |
-          # 查找生成的AppImage
           APPIMAGE_FILE=$(find dist/ -name "*.AppImage" -type f | head -n1)
-          
           if [ -n "$APPIMAGE_FILE" ]; then
             echo "Found AppImage: $APPIMAGE_FILE"
-            
-            # 验证文件类型
             file "$APPIMAGE_FILE"
-            
-            # 检查可执行权限
             chmod +x "$APPIMAGE_FILE"
-            
-            # 显示AppImage信息
             echo "AppImage size: $(du -h "$APPIMAGE_FILE" | cut -f1)"
-            
-            # 移动到标准位置
             mkdir -p output
             mv "$APPIMAGE_FILE" output/${APP_NAME}-linux-arm64.AppImage
-            
             echo "AppImage build successful!"
           else
             echo "AppImage not found!"
@@ -128,15 +117,17 @@ jobs:
       - name: Upload AppImage Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-arm64-appimage-fastforge
+          # name: linux-arm64-appimage-fastforge
           path: output/*.AppImage
           retention-days: 30
 
       # 9. 可选：发布到GitHub Releases
       - name: Create Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          generate_release_notes: true
           files: output/*.AppImage
-          draft: false
-          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
