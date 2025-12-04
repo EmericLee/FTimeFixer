@@ -72,6 +72,14 @@ jobs:
           dart pub global activate fastforge
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
 
+      # 6. 安装appimagetool (FastForge必需)
+      - name: Install appimagetool
+        run: |
+          # 下载并安装appimagetool
+          wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-aarch64.AppImage
+          chmod +x appimagetool
+          sudo mv appimagetool /usr/local/bin/
+
 
       # 7. 创建AppImage构建配置
 
