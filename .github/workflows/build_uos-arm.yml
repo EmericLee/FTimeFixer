@@ -138,7 +138,7 @@ jobs:
           
           # 复制图标 (假设项目根目录有 assets/logo.png)
           # 如果没有图标，可以生成一个空的或者下载一个占位
-          cp assets/logo512.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
+          cp assets/icon512.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
           # 这里为了演示不报错，创建一个假图标
           # touch $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
 
