@@ -26,6 +26,22 @@ jobs:
       APP_ID: com.example.myapp
 
     steps:
+
+# 【关键修正步骤】：配置 Debian 10 归档源
+      - name: Fix Debian 10 Sources (EOL)
+        run: |
+          # 1. 备份原源列表（可选）
+          cp /etc/apt/sources.list /etc/apt/sources.list.bak
+          
+          # 2. 写入归档源地址 (archive.debian.org)
+          echo "deb http://archive.debian.org/debian/ buster main contrib non-free" > /etc/apt/sources.list
+          
+          # 3. 忽略 Release 文件过期报错 (这是必须的，否则 apt update 会失败)
+          echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+          
+          # 4. 删除可能存在的其他源配置，防止干扰
+          rm -f /etc/apt/sources.list.d/*
+          
       # 1. 初始化构建环境（在容器内）
       - name: Install System Dependencies
         run: |
