@@ -1,5 +1,4 @@
-name: Build  with FastForge
-
+name: "Flutter & FastForge"
 on:
   push:
     branches: [main, master]
@@ -24,8 +23,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       # 1. 使用Git方式安装Flutter SDK (ARM兼容)
       - name: Setup Flutter SDK from Git
