@@ -30,7 +30,7 @@ jobs:
         run: |
           git clone https://github.com/flutter/flutter.git --branch ${{ env.FLUTTER_VERSION }} --depth 1 /opt/flutter
           echo "/opt/flutter/bin" >> $GITHUB_PATH
-  
+
 
       # 2. 安装Linux桌面依赖和FastForge所需工具
       - name: Install Linux Desktop Dependencies
