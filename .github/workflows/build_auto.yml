@@ -163,6 +163,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -217,7 +218,6 @@ jobs:
 
       - name: prepare Windows  (x86)
         run: |
-          vcpkg install gtk:x86-windows
           flutter config --enable-windows-desktop
 
       - name: build Windows x86 
