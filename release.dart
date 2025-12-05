@@ -45,7 +45,7 @@ void main(List<String> args) {
     print('✅ 版本已更新为: $newVersion');
 
     // 5. Git 提交与打 Tag
-    print('📦 执行 Git 操作...');
+    print('📦 推送到远程仓库: git push && git push --tags');
     runCommand('git', ['add', '.']);
 
     final commitMsg = 'Release version v$newVersion';
@@ -54,12 +54,10 @@ void main(List<String> args) {
     final tagName = 'v$newVersion';
     runCommand('git', ['tag', '-a', tagName, '-m', 'Release v$tagName']);
 
-    print('✅ 推送到远程仓库: git push && git push --tags');
     runCommand('git', ['push']);
     runCommand('git', ['push', '--tags']);
         print('🎉 发布完成！');
-    print('👉 提交信息: $commitMsg');
-    print('👉 Tag: $tagName');
+    print('👉 提交信息: $commitMsg  Tag: $tagName');
 
   } catch (e) {
     print('❌ 发生异常: $e');
