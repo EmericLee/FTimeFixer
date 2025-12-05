@@ -47,7 +47,7 @@ void main(List<String> args) {
 
     // 5. Git 提交与打 Tag
     print('📦 执行 Git 操作...');
-    // runCommand('git', ['add', '.']);
+    runCommand('git', ['add', '.']);
 
     final commitMsg = 'Release version v$newVersion';
     runCommand('git', ['commit', '-m', commitMsg]);
