@@ -162,37 +162,88 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-android:
-    name: Build Android APK
+  build-linux-x86:
+    name: Build Linux x86_64
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Flutter
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Flutter
         uses: subosito/flutter-action@v2.13.0
         with:
           flutter-version: "${{ env.FLUTTER_VERSION }}" # 使用全局版本变量
           cache: false
           
-      - name: Install Flutter dependencies
+      - name: 安装 Linux 依赖
         run: |
-          flutter doctor -v
-          flutter --version 
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-dev \
+            build-essential libglu1-mesa-dev file wget fuse
+          
+      - name: 获取 Flutter 依赖
+        run: |
           flutter pub get
+          flutter clean
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: 构建 Linux x86_64
+        run: |
+          flutter build linux --release --target-platform linux-x64
 
-      - name: Upload Release
+      - name: 打包 Linux AppImage
+        run: |
+          # 安装 AppImage 工具
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
+          
+          # 创建 AppDir 结构
+          BUILD_DIR=build/linux/x64/release/bundle
+          APP_DIR=AppDir
+          
+          mkdir -p $APP_DIR/usr/bin
+          mkdir -p $APP_DIR/usr/lib
+          mkdir -p $APP_DIR/usr/share/applications
+          mkdir -p $APP_DIR/usr/share/icons/hicolor/256x256/apps
+          
+          # 复制构建产物
+          cp -r $BUILD_DIR/* $APP_DIR/usr/bin/
+          
+          # 获取二进制文件名
+          BINARY_NAME=$(find $APP_DIR/usr/bin -maxdepth 1 -type f -executable ! -name "*.so" -printf "%f" | head -n 1)
+          echo "Detected Binary Name: $BINARY_NAME"
+          
+          # 创建 .desktop 文件
+          cat > $APP_DIR/usr/share/applications/${{ env.APP_ID }}.desktop <<EOF
+          [Desktop Entry]
+          Type=Application
+          Name=${{ env.APP_NAME }}
+          Exec=$BINARY_NAME
+          Icon=${{ env.APP_ID }}
+          Categories=Utility;
+          EOF
+          
+          # 复制图标
+          cp assets/icon512.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
+
+          # 使用 appimagetool 打包
+          cd $APP_DIR
+          find . -type f -exec chmod 755 {} \;
+          cd ..
+          appimagetool AppDir ${{ env.APP_NAME }}-linux-x86_64.AppImage
+
+      - name: 上传 Linux x86_64 Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ env.RELEASE_NAME }}
           generate_release_notes: true
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: "*.AppImage"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -232,5 +283,39 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           generate_release_notes: true
           files: ${{ env.APP_NAME }}-windows-x86.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.13.0
+        with:
+          flutter-version: "${{ env.FLUTTER_VERSION }}" # 使用全局版本变量
+          cache: false
+          
+      - name: Install Flutter dependencies
+        run: |
+          flutter doctor -v
+          flutter --version 
+          flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ env.RELEASE_NAME }}
+          generate_release_notes: true
+          files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
