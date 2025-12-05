@@ -95,6 +95,7 @@ jobs:
           chmod +x linuxdeploy-aarch64.AppImage
           # 由于在 Docker内,FUSE 可能无法工作，我们解压使用
           ./linuxdeploy-aarch64.AppImage --appimage-extract
+          rm linuxdeploy-aarch64.AppImage
           mv squashfs-root linuxdeploy-root
 
       # 7. 打包 AppImage
@@ -142,13 +143,15 @@ jobs:
             --output appimage
 
       # 8. 上传产物
-      # - name: Upload Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: flutter-app-uos-arm64
-      #     path: "*.AppImage"
+      - name: Upload Artifact
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-app-uos-arm64
+          path: "*.AppImage"
 
-      - name: Upload
+      - name: Upload Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
