@@ -197,7 +197,7 @@ jobs:
 
   build-windows:
     name: Build Windows x86
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       contents: write
     steps:
@@ -218,16 +218,14 @@ jobs:
       - name: prepare Windows  (x86)
         run: |
           vcpkg install gtk:x86-windows
-          # 启用 Windows 桌面支持
           flutter config --enable-windows-desktop
-          # 构建 Windows x86 发布版本
-          flutter build windows --release --target-platform windows-x86
 
-      - name: 打包 Windows x86 产物
+      - name: build Windows x86 
         run: |
+          flutter build windows --release --target-platform windows-x86
           Compress-Archive -Path build\windows\runner\Release\* -DestinationPath ${{ env.APP_NAME }}-windows-x86.zip
 
-      - name: 上传 Windows x86 产物
+      - name: upload Windows x86
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
