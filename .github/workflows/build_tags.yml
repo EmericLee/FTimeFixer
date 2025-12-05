@@ -8,8 +8,13 @@ on:
       - '.github/workflows/build_tags.yml'
   workflow_dispatch: # 允许手动触发
 
+env:
+  FLUTTER_VERSION: '3.38.3'
+  APP_NAME: 'flutter_demo'
+  APP_ID: com.example.myapp
+
 jobs:
-  build:
+  build-uos:
     name: "Build UOS (ARM64)"
     # 使用官方 ARM Runner
     runs-on: ubuntu-24.04-arm
@@ -20,34 +25,25 @@ jobs:
       image: arm64v8/debian:buster
       options: --user root # 确保有权限安装依赖
 
-    env:
-      FLUTTER_VERSION: '3.38.3'
-      # 定义 App 基本信息
-      APP_NAME: my_flutter_app
-      APP_ID: com.example.myapp
-
     steps:
+      # 1. 修复 Debian 10 源列表（EOL 问题）
       - name: Fix Debian 10 Sources (EOL)
         run: |
           # 1. 备份原源列表（可选）
           rm -rf /etc/apt/sources.list.d/*
           rm -f /etc/apt/sources.list
-          
           echo "deb http://archive.debian.org/debian/ buster main contrib non-free" > /etc/apt/sources.list
           echo "deb http://archive.debian.org/debian-security/ buster/updates main" >> /etc/apt/sources.list
-                
           echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
-          
-          # 4. 删除可能存在的其他源配置，防止干扰
+          # 3. 删除可能存在的其他源配置，防止干扰
           rm -f /etc/apt/sources.list.d/*
-
           # 4. 更新并执行 dist-upgrade
-          # 【关键点】：dist-upgrade 会强制同步（降级/升级）系统内的 libc6 等基础库
+          # 【关键点】 dist-upgrade 会强制同步（降级/升级）系统内的 libc6 等基础库
           # 确保它们与 archive 源里的版本完全一致，从而允许安装 dev 包。
           apt-get update
           apt-get -y dist-upgrade          
 
-      # 1. 初始化构建环境（在容器内）
+      # 2. 初始化构建环境（在容器内）
       - name: Install System Dependencies
         run: |
           apt-get update
@@ -57,19 +53,17 @@ jobs:
             libgtk-3-dev liblzma-dev libstdc++-8-dev \
             build-essential libglu1-mesa-dev file wget fuse
 
-      # 2. 检出代码
+      # 3. 检出代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 3. 手动 Git 配置 Flutter SDK
+      # 4. 手动 Git 配置 Flutter SDK
       - name: Setup Flutter SDK via Git
         run: |
           echo "Cloning Flutter SDK..."
           git clone https://github.com/flutter/flutter.git --depth 1 -b $FLUTTER_VERSION _flutter
-          
           # 配置环境变量
           echo "$GITHUB_WORKSPACE/_flutter/bin" >> $GITHUB_PATH
-          
           # 标记目录安全，防止 git 报错
           git config --global --add safe.directory $GITHUB_WORKSPACE/_flutter
 
@@ -77,21 +71,18 @@ jobs:
       - name: Flutter Doctor & Pub Get
         run: |
           # 将 flutter 路径加入当前 session
-          export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
-          
+          # export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
           # 禁用分析以加快速度
           flutter config --no-analytics
-          
           # 预下载构件
           flutter precache --linux
-          
           flutter doctor -v
           flutter pub get
 
       # 5. 构建 Release 包
       - name: Build Linux Release
         run: |
-          export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
+          # export PATH="$GITHUB_WORKSPACE/_flutter/bin:$PATH"
           flutter build linux --release --target-platform=linux-arm64
 
       # 6. 准备 AppImage 构建工具 (LinuxDeploy)
@@ -100,8 +91,7 @@ jobs:
           # 下载 LinuxDeploy (aarch64)
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-aarch64.AppImage
           chmod +x linuxdeploy-aarch64.AppImage
-          
-          # 由于在 Docker 内，FUSE 可能无法工作，我们解压使用
+          # 由于在 Docker内,FUSE 可能无法工作，我们解压使用
           ./linuxdeploy-aarch64.AppImage --appimage-extract
           mv squashfs-root linuxdeploy-root
 
@@ -135,11 +125,8 @@ jobs:
           Categories=Utility;
           EOF
           
-          # 复制图标 (假设项目根目录有 assets/logo.png)
-          # 如果没有图标，可以生成一个空的或者下载一个占位
+          # 复制图标 (假设项目根目录有 assets/icon512.png)
           cp assets/icon512.png $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
-          # 这里为了演示不报错，创建一个假图标
-          # touch $APP_DIR/usr/share/icons/hicolor/256x256/apps/${{ env.APP_ID }}.png
 
           # 使用 LinuxDeploy 自动打包依赖库 (GTK等)
           # 注意：在 Docker 内需要设置 ARCH=arm64 并可能需要禁用 git 更新检查
@@ -153,8 +140,18 @@ jobs:
             --output appimage
 
       # 8. 上传产物
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      # - name: Upload Artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: flutter-app-uos-arm64
+      #     path: "*.AppImage"
+
+      - name: Upload
+        uses: softprops/action-gh-release@v1
         with:
-          name: flutter-app-uos-arm64
-          path: "*.AppImage"
+          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: "*.AppImage"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
