@@ -4,8 +4,8 @@ on:
     branches: [main, master]
     tags:
       - "v*.*.*"  # 当推送v开头的标签时触发CI/CD
-    paths:
-      - '.github/workflows/build_tags.yml'
+    # paths:
+    #   - '.github/workflows/build_tags.yml'
   workflow_dispatch: # 允许手动触发
 
 env:
@@ -18,6 +18,8 @@ jobs:
     name: "Build UOS (ARM64)"
     # 使用官方 ARM Runner
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
     
     # 【关键步骤】：为了兼容统信 UOS (GLIBC_2.28)，我们必须在 Debian 10 (Buster) 容器内构建
     # Debian 10 默认 GLIBC 版本正是 2.28
