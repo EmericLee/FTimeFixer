@@ -1,15 +1,16 @@
-name: "AppImage for UOS (ARM64)"
+name: "Build with Tags"
 on:
   push:
     branches: [main, master]
+    tags:
+      - "v*.*.*"  # 当推送v开头的标签时触发CI/CD
     paths:
-      - '.github/workflows/build_uos-arm.yml'
+      - '.github/workflows/build_tags.yml'
   workflow_dispatch: # 允许手动触发
-
 
 jobs:
   build:
-    name: Build Linux ARM64
+    name: "Build UOS (ARM64)"
     # 使用官方 ARM Runner
     runs-on: ubuntu-24.04-arm
     
@@ -26,8 +27,6 @@ jobs:
       APP_ID: com.example.myapp
 
     steps:
-
-# 【关键修正步骤】：配置 Debian 10 归档源
       - name: Fix Debian 10 Sources (EOL)
         run: |
           # 1. 备份原源列表（可选）
