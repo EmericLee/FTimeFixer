@@ -1,4 +1,4 @@
-name: "Build with Tags"
+name: "Build AUTO"
 on:
   push:
     branches: [main, master]
