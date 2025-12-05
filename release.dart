@@ -21,9 +21,8 @@ void main(List<String> args) {
   // runCommand 自定义函数在下面
   final status = runCommand('git', ['status', '--porcelain']);
   if (status.stdout.toString().trim().isNotEmpty) {
-    print('Git 工作区不干净。 run stash 暂存更改。');
+    print('🔄 Git 工作区不干净。 添加所有更改。');
     runCommand('git', ['add', '.']);
-    // runCommand('git', ['stash']);
   }else{
     print('✅ Git 工作区干净，继续发布流程...');
   }
@@ -55,12 +54,12 @@ void main(List<String> args) {
     final tagName = 'v$newVersion';
     runCommand('git', ['tag', '-a', tagName, '-m', 'Release v$tagName']);
 
-    print('🎉 发布完成！');
-    print('👉 提交信息: $commitMsg');
-    print('👉 Tag: $tagName');
     print('✅ 推送到远程仓库: git push && git push --tags');
     runCommand('git', ['push']);
     runCommand('git', ['push', '--tags']);
+        print('🎉 发布完成！');
+    print('👉 提交信息: $commitMsg');
+    print('👉 Tag: $tagName');
 
   } catch (e) {
     print('❌ 发生异常: $e');
