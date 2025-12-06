@@ -8,42 +8,14 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the hot reload. If we changed
-        // _counter without calling setState(), then the build method would not
-        // be called again, and so nothing would appear to happen.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 115, 198, 7)),
       ),
-      home: FutureBuilder<PackageInfo>(
-        future: PackageInfo.fromPlatform(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final packageInfo = snapshot.data!;
-          return MyHomePage(
-            title: 'Flutter Demo Home Page',
-            version: '${packageInfo.version} (${packageInfo.buildNumber})',
-          );
-        },
-      ),
+      home: const MyHomePage(title: 'Flutter Demo Home Page #'),
     );
   }
 }
@@ -68,6 +40,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  PackageInfo? _packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersionInfo();
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = packageInfo;
+    });
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -96,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('${widget.title} $_counter |||'),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -120,13 +106,15 @@ class _MyHomePageState extends State<MyHomePage> {
             // 版本号显示
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Text(
-                '版本: ${widget.version}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              child: _packageInfo != null 
+                ? Text(
+                    '版本: ${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                : const CircularProgressIndicator(),
             ),
             const SizedBox(height: 20),
             const Text('You have pushed the button this many times:'),
