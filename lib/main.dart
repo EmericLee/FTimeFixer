@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,14 +24,26 @@ class MyApp extends StatelessWidget {
         // the command line to start the app).
         //
         // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
+        // state is not lost during the hot reload. If we changed
+        // _counter without calling setState(), then the build method would not
+        // be called again, and so nothing would appear to happen.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: FutureBuilder<PackageInfo>(
+        future: PackageInfo.fromPlatform(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final packageInfo = snapshot.data!;
+          return MyHomePage(
+            title: 'Flutter Demo Home Page',
+            version: '${packageInfo.version} (${packageInfo.buildNumber})',
+          );
+        },
+      ),
     );
   }
 }
@@ -104,6 +117,18 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 版本号显示
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                '版本: ${widget.version}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             const Text('You have pushed the button this many times:'),
             Text(
               '$_counter',
