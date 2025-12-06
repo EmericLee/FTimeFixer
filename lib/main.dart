@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text('${widget.title} $_counter |||222'),
+        title: Text('${widget.title} $_counter |'),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
@@ -105,10 +105,10 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             // 版本号显示
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding: const EdgeInsets.symmetric(vertical: 6.0),
               child: _packageInfo != null 
                 ? Text(
-                    '版本: ${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                    '版本: v${_packageInfo!.version} (${_packageInfo!.buildNumber})',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.grey[600],
                       fontWeight: FontWeight.w500,
@@ -116,11 +116,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   )
                 : const CircularProgressIndicator(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 60),
             const Text('You have pushed the button this many times:'),
             Text(
               '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.grey[600],
+                fontSize: 64,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
