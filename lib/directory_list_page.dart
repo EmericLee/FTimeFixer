@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 /// 目录列表 Widget，可复用的文件浏览器组件
 class DirectoryListWidget extends StatefulWidget {
@@ -53,8 +54,63 @@ class _DirectoryListWidgetState extends State<DirectoryListWidget> {
     }
   }
 
+  // 检查并请求存储权限
+  Future<bool> _checkStoragePermission() async {
+    // 根据Android版本检查不同的权限
+    if (Platform.isAndroid) {
+      // Android 13+ (API 33+)
+      if (await Permission.storage.status.isDenied || 
+          await Permission.photos.status.isDenied ||
+          await Permission.videos.status.isDenied ||
+          await Permission.audio.status.isDenied) {
+        // 请求Android 13+的媒体权限
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.storage,
+          Permission.photos,
+          Permission.videos,
+          Permission.audio,
+        ].request();
+        
+        // 检查是否有必要的权限被授予
+        return statuses[Permission.storage]?.isGranted == true ||
+               statuses[Permission.photos]?.isGranted == true ||
+               statuses[Permission.videos]?.isGranted == true ||
+               statuses[Permission.audio]?.isGranted == true;
+      }
+      
+      // Android 11-12 (API 30-32)
+      if (await Permission.storage.status.isDenied) {
+        if (await Permission.storage.request().isGranted) {
+          return true;
+        }
+      }
+      
+      // Android 10 及以下
+      if (await Permission.manageExternalStorage.status.isDenied) {
+        if (await Permission.manageExternalStorage.request().isGranted) {
+          return true;
+        }
+      }
+    }
+    
+    // 非Android平台或已拥有权限
+    return true;
+  }
+
   // 开始扫描目录
   Future<void> _startScan(String directoryPath) async {
+    // 检查权限
+    bool hasPermission = await _checkStoragePermission();
+    if (!hasPermission) {
+      setState(() {
+        _isScanning = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('需要存储权限才能访问文件')),
+      );
+      return;
+    }
+    
     setState(() {
       _selectedDirectory = directoryPath;
       _isScanning = true;
@@ -118,25 +174,70 @@ class _DirectoryListWidgetState extends State<DirectoryListWidget> {
   // 递归扫描目录
   Future<void> _scanDirectory(String directoryPath) async {
     Directory directory = Directory(directoryPath);
-    if (!directory.existsSync()) return;
+    if (!directory.existsSync()) {
+      print('目录不存在: $directoryPath');
+      return;
+    }
 
     try {
-      // 获取目录中的所有实体
-      List<FileSystemEntity> entities =
-          directory.listSync(recursive: true, followLinks: false);
+      // 使用异步方式获取目录实体，避免阻塞UI线程
+      Stream<FileSystemEntity> entityStream = 
+          directory.list(recursive: true, followLinks: false);
 
-      for (var entity in entities) {
-        // 暂停200毫秒
+      await for (var entity in entityStream) {
+        // 暂停10毫秒，避免UI卡顿
         await Future.delayed(const Duration(milliseconds: 10));
-        if (entity is File) {
-          setState(() {
-            _fileList.add(entity);
-          });
+        
+        try {
+          if (entity is File) {
+            // 检查文件是否可读
+            if (entity.existsSync() && await entity.length() >= 0) {
+              // 确保组件仍然处于挂载状态，避免setState() called after dispose()错误
+              if (mounted) {
+                setState(() {
+                  _fileList.add(entity);
+                });
+              }
+            }
+          }
+        } catch (fileError) {
+          // 忽略单个文件的错误，继续扫描其他文件
+          print('访问文件时出错: ${entity.path}, 错误: $fileError');
         }
       }
     } catch (e) {
-      // 忽略权限问题等异常，继续扫描其他文件
-      print('扫描目录时出错: $e');
+      // 记录详细的目录扫描错误
+      print('扫描目录时出错: $directoryPath, 错误: $e');
+      
+      // 在Android平台上，可能需要特殊处理分区存储限制
+      if (Platform.isAndroid) {
+        print('Android平台上的目录访问错误，可能是因为分区存储限制');
+        // 尝试访问应用私有目录作为替代方案
+        try {
+          String? appDir = Directory.systemTemp.parent?.path;
+          if (appDir != null) {
+            print('尝试访问应用目录: $appDir');
+            Directory appDirectory = Directory(appDir);
+            if (appDirectory.existsSync()) {
+              Stream<FileSystemEntity> appEntityStream = 
+                  appDirectory.list(recursive: true, followLinks: false);
+              
+              await for (var entity in appEntityStream) {
+                if (entity is File) {
+                  // 确保组件仍然处于挂载状态，避免setState() called after dispose()错误
+                  if (mounted) {
+                    setState(() {
+                      _fileList.add(entity);
+                    });
+                  }
+                }
+              }
+            }
+          }
+        } catch (appDirError) {
+          print('访问应用目录时出错: $appDirError');
+        }
+      }
     }
   }
 

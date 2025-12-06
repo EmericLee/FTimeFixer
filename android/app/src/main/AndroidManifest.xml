@@ -1,5 +1,21 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Android 13 及以下版本需要的存储权限 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="33" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="33" />
+    
+    <!-- Android 13+ 需要的权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    
+    <!-- 允许应用访问所有文件（Android 11+，需要在代码中请求） -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    
+    <!-- 针对Android 10的分区存储临时豁免 -->
     <application
+        tools:targetApi="30"
+        tools:ignore="ScopedStorage"
         android:label="flutter_demo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
