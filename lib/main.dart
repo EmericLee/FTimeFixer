@@ -1,6 +1,148 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'directory_list_page.dart';
+import 'directory_scan.dart';
+
+// 首页组件
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  PackageInfo? _packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersionInfo();
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = packageInfo;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('首页'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 应用名称
+              Text(
+                'Flutter Demo',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+              const SizedBox(height: 24),
+              
+              // 应用版本号
+              _packageInfo != null
+                  ? Text(
+                      '版本: v${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    )
+                  : const CircularProgressIndicator(),
+              const SizedBox(height: 48),
+              
+              // 介绍文字
+              const Text(
+                '这是一个Flutter演示应用，展示了页面切换、文件扫描和状态保持等功能。\n\n' 
+                '主要功能：\n' 
+                '• 版本信息展示\n' 
+                '• 文件系统扫描\n' 
+                '• 状态保持的页面切换',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.5,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// 文件扫描页组件
+class FileScannerPage extends StatelessWidget {
+  const FileScannerPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('文件扫描'),
+      ),
+      body: const DirectoryListWidget(),
+    );
+  }
+}
+
+// 演示页组件
+class DemoPage extends StatefulWidget {
+  const DemoPage({super.key});
+
+  @override
+  State<DemoPage> createState() => _DemoPageState();
+}
+
+class _DemoPageState extends State<DemoPage> {
+  int _counter = 0;
+
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('演示'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('点按计数功能:'),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.grey[600],
+                    fontSize: 64,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
 
 void main() {
   runApp(const MyApp());
@@ -24,15 +166,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -40,111 +173,54 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  PackageInfo? _packageInfo;
+  // 当前选中的页面索引
+  int _currentIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadVersionInfo();
-  }
+  // 页面列表
+  final List<Widget> _pages = const [
+    HomePage(),
+    FileScannerPage(),
+    DemoPage(),
+  ];
 
-  Future<void> _loadVersionInfo() async {
-    final packageInfo = await PackageInfo.fromPlatform();
-    setState(() {
-      _packageInfo = packageInfo;
-    });
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  // 导航栏项目列表
+  final List<BottomNavigationBarItem> _navItems = const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: '首页',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.folder_open),
+      label: '文件扫描',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.play_arrow),
+      label: '演示',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text('${widget.title} $_counter |'),
+      // 使用IndexedStack保持页面状态
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 版本号显示
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 6.0),
-              child: _packageInfo != null 
-                ? Text(
-                    '版本: v${_packageInfo!.version} (${_packageInfo!.buildNumber})',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                : const CircularProgressIndicator(),
-            ),
-            const SizedBox(height: 60),
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.grey[600],
-                fontSize: 64,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 40),
-            // 目录列表页面按钮
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const DirectoryListPage()),
-                );
-              },
-              child: const Text('打开目录列表'),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      // 底部导航栏
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        items: _navItems,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        elevation: 8.0,
       ),
     );
   }
