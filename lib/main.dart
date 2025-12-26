@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'directory_scan.dart';
+import 'notification_service.dart';
 
 // 首页组件
 class HomePage extends StatefulWidget {
@@ -158,7 +160,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 115, 198, 7)),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page #'),
+      builder: BotToastInit(), // 配置BotToast
+      navigatorObservers: [BotToastNavigatorObserver()], // 添加BotToast导航观察者
+      home: Builder(
+        builder: (context) {
+          return const MyHomePage(title: 'Flutter Demo Home Page #');
+        },
+      ),
     );
   }
 }

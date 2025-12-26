@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:core';
 import 'package:exif/exif.dart';
+import 'package:flutter/foundation.dart';
 import 'logger_service.dart';
 
 /// 时间分析状态枚举
@@ -140,9 +141,9 @@ class TimeAnalyzer {
       if (match != null) {
         try {
           //显示所有匹配组，包括null值，自动判断匹配元素数量
-          final groups = List<String?>.generate(
-              match.groupCount + 1, (i) => match.group(i));
-          logger.d('匹配组: $groups');
+          // final groups = List<String?>.generate(
+          //     match.groupCount + 1, (i) => match.group(i));
+          // logger.d('匹配组: $groups');
 
           if (match.groupCount >= 3) {
             int year, month, day, hour, minute, second;
@@ -190,7 +191,7 @@ class TimeAnalyzer {
 
     // Unix时间戳（10位或13位）
     final matchUnix = RegExp(r'(\d{10,13})').firstMatch(filename);
-    logger.d('匹配 UNIX: ${matchUnix?.group(0)}');
+    // logger.d('匹配 UNIX: ${matchUnix?.group(0)}');
     if (matchUnix != null) {
       final timestampStr = matchUnix.group(0) ?? '';
       final timestamp = int.parse(timestampStr);
